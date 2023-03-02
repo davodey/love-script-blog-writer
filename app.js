@@ -24,14 +24,14 @@ const client = createClient({
 
 const db = mongoose.connection;
 let links = ''
-let title = 'Online Dating when you have kids kids';
+let title = 'how to write a blog post'
 let author = 'Samantha - journalist, writer, editor, and blogger';
 let blogIdea = (function() {
 	return {
 		title: title,
 		author: author,
 		prompts: {
-			title: `Create a unique, creative, and catchy title for this article that could be seen in a magazine. The title should accurately reflect the content of the article and should not include the year. The original title is: "${title}"`,
+			title: `Create a unique, creative, funny, and catchy title for this article that could be seen in a magazine. The title should accurately reflect the content of the article and should not include the year. The original title is: "${title}"`,
 			links: '',
 			excerpt: '',
 			tags: ''
@@ -53,9 +53,9 @@ db.once('open', async function() {
 		const writingStyle = 'creative, funny, witty, very detailed, senior editor';
 		blogIdea.links = await runGoogleSearch(title);
 
-		// const articlePrompt = `As ${blogIdea.author}, write a blog article with a writing style of ${writingStyle}. The article should not mention the title. Instead, the focus should be on exploring the ideas and concepts related to this title: ${blogIdea.title}. If you need inspiration here are some questions you can answer in the article: ${blogIdea.links}`;
-		// const articleResponse = await openAiRequest(articlePrompt, .8);
-		blogIdea.article = 'hi this is it';
+		const articlePrompt = `As ${blogIdea.author}, write a blog article with a writing style of ${writingStyle}. The article should not mention the title. Instead, the focus should be on exploring the ideas and concepts related to this title: ${blogIdea.title}. If you need inspiration here are some questions you can answer in the article: ${blogIdea.links}`;
+		const articleResponse = await openAiRequest(articlePrompt, .4);
+		blogIdea.article =  articleResponse.choices[0].text
 
 		const excerptPrompt = `Generate a 30 word summary of the following article. The summary should capture the main ideas and be no more than 200 characters long. ARTICLE: ${blogIdea.article}`;
 		const excerptResponse = await openAiRequest(excerptPrompt, .8);
@@ -82,13 +82,11 @@ db.once('open', async function() {
 
 	generateBlogIdea().then(async () => {
 		console.log('Blog idea generated successfully', blogIdea);
-		const blogIdeaData = new BlogIdea(blogIdea);
-		await blogIdeaData.save();
-
-		console.log('Blog idea saved to database');
-
-		rl.question('Do you want to save the blog idea to Contentful? (yes/no) ', (answer) => {
+		rl.question('Do you want to save the blog idea to Contentful? (yes/no) ', (async answer => {
 			if (answer === 'yes') {
+				const blogIdeaData = new BlogIdea(blogIdea);
+				await blogIdeaData.save();
+				console.log('Blog idea saved to database');
 				client.getSpace('4ij9jmh5wg5g')
 					.then((space) => space.getEnvironment('master'))
 					.then((environment) => environment.createEntry( {contentTypeId:  'title'},{
@@ -112,7 +110,7 @@ db.once('open', async function() {
 			}
 
 			rl.close();
-		});
+		}));
 	});
 });
 
